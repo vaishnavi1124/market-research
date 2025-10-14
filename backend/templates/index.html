@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Market Research Generator</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;display:flex}
+.sidebar{width:260px;background:#1F2937;color:#fff;height:100vh;padding:20px;box-sizing:border-box;display:flex;flex-direction:column}
+.sidebar h2{font-size:18px;margin-bottom:15px;color:#f9fafb}
+.chat-history{flex:1;overflow-y:auto;border-top:1px solid #374151;border-bottom:1px solid #374151;padding:10px 0}
+.chat-history-item{padding:10px 12px;cursor:pointer;border-radius:8px;margin-bottom:8px;background:#374151;transition:background .2s;font-size:14px;position:relative}
+.chat-history-item:hover{background:#4B5563}
+.new-chat-btn{margin-top:10px;background:#2563EB;border:none;color:#fff;padding:10px;border-radius:8px;cursor:pointer;font-size:14px}
+.new-chat-btn:hover{background:#1D4ED8}
+
+.main-content{flex:1;max-width:1000px;margin:0 auto;padding:20px}
+h1{color:#1F2937;text-align:center}
+.container{display:flex;flex-direction:column;gap:20px}
+.form-section,.report-section{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+label{font-weight:bold;margin:10px 0 6px;display:block;color:#374151}
+input[type="text"],textarea,select{width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:6px;font-size:16px}
+button{padding:10px 20px;background:#007bff;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:16px;transition:background .3s;display:inline-flex;align-items:center;gap:6px}
+button:hover{background:#0056b3}
+.report-section{display:none}
+.report-content{font-family:Helvetica,Arial,sans-serif;color:#1F2937;line-height:1.5;padding:15px;border-radius:6px;border:1px solid #E5E7EB;background:#f8f9fa;margin-bottom:20px}
+.report-content h1{font-size:22px;font-weight:bold;color:#0F172A;text-align:center;margin:10px 0 14px}
+.report-content h2{font-size:14px;font-weight:bold;color:#111827;margin:12px 0 6px}
+.report-content h3{font-size:12.5px;font-weight:bold;color:#111827;margin:10px 0 6px}
+.report-content p{font-size:10.5px;margin-bottom:6px}
+.report-content ul,.report-content ol{font-size:10.5px;margin:0 0 6px 18px;padding-left:6px}
+.report-content table{width:100%;border-collapse:collapse;margin:6px 0;font-size:9.5px}
+.report-content table th,.report-content table td{border:.5px solid #808080;padding:4px;text-align:center}
+.report-content table th{background:#E5E7EB;font-weight:bold;color:#000}
+.report-content pre{background:#f5f5f5;padding:6px;border:.5px solid #E5E7EB;font-family:Courier,monospace;font-size:9.5px;margin:6px 0;border-radius:4px}
+.report-content hr{border:none;border-top:.6px solid #E5E7EB;margin:6px 0}
+.error{color:#DC2626;font-weight:bold}
+.report-entry{margin-bottom:30px}
+.report-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;margin-bottom:10px;padding-bottom:5px}
+.report-header h3{font-size:16px;color:#1f2937;margin:0;border:none;padding:0}
+.download-btn{padding:6px 12px;background:#10b981;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;transition:background .3s;display:inline-flex;align-items:center;gap:6px}
+.download-btn:hover{background:#059669}
+.agent-progress{color:#374151;font-weight:bold;margin:6px 0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.scope-grid{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:8px;margin:8px 0}
+
+/* Q&A under report */
+.qa-box{display:none;margin-top:16px}
+.qa-box h3{margin:8px 0 6px;color:#1F2937}
+.qa-input{display:grid;grid-template-columns:1fr auto;gap:8px}
+.chat-log{background:#fff;border:1px solid #E5E7EB;border-radius:6px;padding:12px;max-height:300px;overflow-y:auto;margin-top:10px}
+.chat-msg{margin-bottom:12px}
+.chat-msg .role{font-weight:bold;color:#111827}
+.suggestions-box{margin-top:12px;padding-top:10px;border-top:1px solid #e5e7eb}
+.suggestion-btn{background:#e5e7eb;color:#1f2937;border:1px solid #d1d5db;padding:6px 10px;border-radius:12px;cursor:pointer;font-size:13px;margin:0 6px 6px 0;transition:background .2s}
+.suggestion-btn:hover{background:#d1d5db}
+
+/* badges */
+.badge{display:inline-block;font-size:11px;padding:2px 6px;border-radius:10px;margin-left:6px;background:#10B981;color:#fff}
+.badge.report{background:#10B981}
+.item-sub{display:block;font-size:12px;color:#D1D5DB;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ellipsis menu */
+.item-actions{position:absolute;right:8px;top:8px}
+.item-actions button{background:transparent;border:none;color:#e5e7eb;cursor:pointer;padding:4px;border-radius:6px}
+.item-actions button:hover{background:rgba(255,255,255,0.08)}
+.menu{position:absolute;right:8px;top:34px;background:#111827;border:1px solid #374151;border-radius:8px;min-width:160px;display:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.menu.open{display:block}
+.menu .menu-item{display:block;width:100%;text-align:left;background:transparent;border:none;color:#f9fafb;padding:10px 12px;cursor:pointer;font-size:13px}
+.menu .menu-item:hover{background:#1f2937}
+.menu .menu-item[disabled]{opacity:.5;cursor:not-allowed}
+</style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Chat History</h2>
+    <div class="chat-history" id="chatHistory"></div>
+    <button class="new-chat-btn" id="newChatBtn"><i class="fa fa-plus"></i> New Chat</button>
+  </div>
+
+  <div class="main-content">
+    <h1>Market Research Generator</h1>
+    <div class="container">
+      <div class="form-section">
+        <form id="researchForm">
+          <div class="grid-2">
+            <div>
+              <label for="sector">Research Sector:</label>
+              <select id="sector" name="sector" required>
+                <option value="">-- Select Sector --</option>
+                <option>Automotive</option><option>Healthcare</option><option>Technology</option>
+                <option>Finance</option><option>Retail</option><option>Energy</option>
+                <option>Telecom</option><option>FMCG</option><option>Pharma</option>
+              </select>
+            </div>
+            <div>
+              <label for="research_type">Type of Research:</label>
+              <select id="research_type" name="research_type" required>
+                <option value="">-- Select Type --</option>
+                <option>Market Sizing</option><option>Competitive Analysis</option>
+                <option>Consumer Insights</option><option>Trends Forecasting</option>
+                <option>Pricing Analysis</option><option>Go-To-Market Plan</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="brief_details">Briefly provide details of research required:</label>
+          <textarea id="brief_details" name="brief_details" rows="4" required placeholder="Key questions, time horizon, audience, etc."></textarea>
+
+          <div class="grid-2">
+            <div>
+              <label for="goals">What are your specific goals?</label>
+              <select id="goals" name="goals" required>
+                <option value="">-- Select Goal --</option>
+                <option>New Product Launch</option><option>Entry to New Market</option>
+                <option>Expansion of Existing Services</option><option>Partnership Strategy</option>
+                <option>Investment Thesis</option>
+              </select>
+            </div>
+            <div>
+              <label>Define the Scope (Geographic):</label>
+              <div class="scope-grid">
+                <label><input type="checkbox" name="scope" value="India"> India</label>
+                <label><input type="checkbox" name="scope" value="APAC"> APAC</label>
+                <label><input type="checkbox" name="scope" value="Europe"> Europe</label>
+                <label><input type="checkbox" name="scope" value="North America"> North America</label>
+                <label><input type="checkbox" name="scope" value="Middle East"> Middle East</label>
+                <label><input type="checkbox" name="scope" value="Africa"> Africa</label>
+                <label><input type="checkbox" name="scope" value="Latin America"> Latin America</label>
+              </div>
+            </div>
+          </div>
+
+          <label for="product_details">Product Details:</label>
+          <textarea id="product_details" name="product_details" rows="3" placeholder="Describe the product or service"></textarea>
+
+          <label for="other_comments">Other Comments:</label>
+          <textarea id="other_comments" name="other_comments" rows="3" placeholder="Constraints, datasets, formatting needs, etc."></textarea>
+
+          <button type="submit"><i class="fa-solid fa-gears"></i> Generate Report</button>
+        </form>
+      </div>
+
+      <div class="report-section" id="reportSection">
+        <h2>Generated Reports</h2>
+        <div id="reportContent"></div>
+
+        <div id="qaBox" class="qa-box">
+          <h3>Ask about this report</h3>
+          <div class="qa-input">
+            <input type="text" id="chatQuery" placeholder="Type your question…">
+            <button id="chatSendBtn" type="button">Ask</button>
+          </div>
+          <div class="suggestions-box" id="suggestionsBox"></div>
+          <div class="chat-log" id="chatLog"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+let ws = null;
+let currentTopic = null;
+const topicIdCache = new Map(); // topic -> report id (from research_topics)
+
+/* ---------- helpers ---------- */
+function createSafeFilename(topic) {
+    if (!topic) return '';
+    const safeTopic = topic.replace(/ /g, '_').replace(/\//g, '_').replace(/:/g, '_').substring(0, 50);
+    return `${safeTopic}_writer_report.pdf`;
+}
+
+function updateAgentProgress(container, message){
+  const p=document.createElement('p');
+  p.className='agent-progress';
+  p.textContent=message;
+  container.appendChild(p);
+}
+
+function initWebSocket(container){
+  try{
+    ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+window.location.host+'/ws/progress');
+    ws.onmessage=(e)=>{ try{ const d=JSON.parse(e.data); updateAgentProgress(container,d.message);}catch{} };
+  }catch{}
+}
+
+function createReportEntry(title, queryPreview, report, filename){
+  const entry=document.createElement('div');
+  entry.className='report-entry';
+  entry.innerHTML=`
+    <div class="report-header">
+      <h3>${title}</h3>
+      ${filename ? `<a href="/download-pdf/${filename}" class="download-btn" target="_blank" title="Download as PDF"><i class="fa fa-download"></i> Download</a>` : ''}
+    </div>
+    ${queryPreview?`<p><strong>Request Summary:</strong> ${queryPreview}</p>`:''}
+    <div class="report-content">${marked.parse(report||'')}</div>
+  `;
+  return entry;
+}
+
+function displaySuggestions(suggestions) {
+    const container = document.getElementById('suggestionsBox');
+    container.innerHTML = '';
+    if (!suggestions || suggestions.length === 0) return;
+
+    suggestions.forEach(text => {
+        const btn = document.createElement('button');
+        btn.className = 'suggestion-btn';
+        btn.textContent = text;
+        btn.onclick = () => {
+            document.getElementById('chatQuery').value = text;
+            document.getElementById('chatSendBtn').click();
+        };
+        container.appendChild(btn);
+    });
+}
+
+async function getReportMetaByTopic(topic){
+  if(topicIdCache.has(topic)) return topicIdCache.get(topic);
+  const r=await fetch('/api/report-by-topic?topic='+encodeURIComponent(topic));
+  if(!r.ok) return null;
+  const data=await r.json();
+  if(data && typeof data.id !== 'undefined'){
+    topicIdCache.set(topic, data.id);
+    return data.id;
+  }
+  return null;
+}
+
+/* ---------- load thread into chat log ---------- */
+async function loadThreadIntoChatLog(topic){
+  const chatLog=document.getElementById('chatLog');
+  chatLog.innerHTML='';
+  const r=await fetch('/api/chat-thread?topic='+encodeURIComponent(topic));
+  const rows=await r.json();
+  (rows||[]).forEach(m=>{
+    if(m.role==='report') return;
+    const el=document.createElement('div');
+    el.className='chat-msg';
+    const role = (m.role==='user'?'You':'Bot');
+    el.innerHTML=`<span class="role">${role}:</span> ${marked.parse(m.message||'')}`;
+    chatLog.appendChild(el);
+  });
+  chatLog.scrollTop=chatLog.scrollHeight;
+}
+
+/* ---------- open report by topic ---------- */
+async function openReportByTopic(topic){
+  currentTopic = topic;
+  const reportSection=document.getElementById('reportSection');
+  const reportContent=document.getElementById('reportContent');
+  const qaBox=document.getElementById('qaBox');
+
+  const r=await fetch('/api/report-by-topic?topic='+encodeURIComponent(topic));
+  const data=await r.json();
+
+  reportSection.style.display='block';
+  reportContent.innerHTML='';
+  
+  const filename = createSafeFilename(topic);
+  const entry=document.createElement('div');
+  entry.className='report-entry';
+  entry.innerHTML=`
+    <div class="report-header">
+        <h3>${topic}</h3>
+        ${filename ? `<a href="/download-pdf/${filename}" class="download-btn" target="_blank" title="Download as PDF"><i class="fa fa-download"></i> Download</a>` : ''}
+    </div>
+    <div class="report-content">${marked.parse((data && data.research) ? data.research : '(No report found for this topic)')}</div>
+  `;
+  reportContent.appendChild(entry);
+
+  qaBox.style.display='block';
+  document.getElementById('suggestionsBox').innerHTML = ''; // Clear suggestions when loading old report
+  await loadThreadIntoChatLog(topic);
+}
+
+/* ---------- form submit (generate report) ---------- */
+document.getElementById('researchForm').addEventListener('submit', async (ev)=>{
+  ev.preventDefault();
+  const reportSection=document.getElementById('reportSection');
+  const reportContent=document.getElementById('reportContent');
+  reportSection.style.display='block';
+
+  const form=new FormData(ev.target);
+  const sector=document.getElementById('sector').value.trim();
+  const researchType=document.getElementById('research_type').value.trim();
+  const goals=document.getElementById('goals').value.trim();
+  const brief=document.getElementById('brief_details').value.trim();
+  const scopeValues=[]; document.querySelectorAll('input[name="scope"]:checked').forEach(cb=>scopeValues.push(cb.value));
+  form.set('scope', scopeValues.join(','));
+
+  const loading=document.createElement('div');
+  loading.className='report-entry';
+  loading.innerHTML=`<p class="agent-progress">Starting…</p>`;
+  reportContent.innerHTML=''; // Clear previous content
+  reportContent.appendChild(loading);
+  initWebSocket(loading);
+
+  try{
+    const res=await fetch('/generate-report',{method:'POST',body:form});
+    if(ws) ws.close();
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Failed to generate report');
+
+    reportContent.removeChild(loading);
+    const topicTitle = `${sector} - ${researchType}`;
+    const filename = createSafeFilename(topicTitle);
+    const entry=createReportEntry(
+      topicTitle,
+      `Goals: ${goals}; Scope: ${scopeValues.join(', ')||'N/A'}; Brief: ${brief}`,
+      data.report,
+      filename
+    );
+    reportContent.innerHTML='';
+    reportContent.appendChild(entry);
+    currentTopic = topicTitle;
+    
+    document.getElementById('qaBox').style.display='block';
+    await loadThreadIntoChatLog(currentTopic);
+    displaySuggestions(data.suggestions);
+
+    entry.scrollIntoView({behavior:'smooth'});
+    topicIdCache.delete(topicTitle); // ensure fresh id cache on save
+    await loadSidebarHistory();
+  }catch(e){
+    if(ws) ws.close();
+    reportContent.removeChild(loading);
+    const err=document.createElement('div'); err.className='report-entry';
+    err.innerHTML=`<p class="error">Error: ${e.message}</p>`;
+    reportContent.appendChild(err);
+  }
+});
+
+/* ---------- inline ask under report ---------- */
+document.getElementById('chatSendBtn').addEventListener('click', async ()=>{
+  const chatLog=document.getElementById('chatLog');
+  const input=document.getElementById('chatQuery');
+  const q=input.value.trim();
+  if(!q || !currentTopic) return;
+
+  const you=document.createElement('div'); you.className='chat-msg'; you.innerHTML=`<span class="role">You:</span> ${q}`;
+  chatLog.appendChild(you);
+  const bot=document.createElement('div'); bot.className='chat-msg'; bot.innerHTML=`<span class="role">Bot:</span> thinking…`;
+  chatLog.appendChild(bot); chatLog.scrollTop=chatLog.scrollHeight;
+  document.getElementById('suggestionsBox').innerHTML = ''; // Clear old suggestions
+
+  try{
+    const params = new URLSearchParams({query:q, topic: currentTopic});
+    const resp=await fetch('/chatbot',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Chatbot error');
+    bot.innerHTML=`<span class="role">Bot:</span> ${marked.parse(data.response||'')}`;
+    displaySuggestions(data.suggestions);
+    await loadSidebarHistory();
+  }catch(e){
+    bot.innerHTML=`<span class="role">Bot:</span> <span class="error">${e.message}</span>`;
+  }finally{
+    input.value='';
+    chatLog.scrollTop=chatLog.scrollHeight;
+  }
+});
+document.getElementById('chatQuery').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('chatSendBtn').click();
+    }
+});
+
+
+/* ---------- sidebar w/ ellipsis menu ---------- */
+async function loadSidebarHistory(){
+  const container=document.getElementById('chatHistory');
+  container.innerHTML='';
+  try{
+    const res=await fetch('/api/chat-history');
+    const topics=await res.json();
+
+    if(Array.isArray(topics) && topics.length){
+      const header=document.createElement('div');
+      header.style="color:#9CA3AF;font-size:12px;margin:8px 0 4px;";
+      header.textContent="Chat History";
+      container.appendChild(header);
+
+      topics.forEach(t=>{
+        const item=document.createElement('div');
+        item.className='chat-history-item';
+        item.dataset.topic = t.topic;
+
+        item.innerHTML = `
+          <div>${t.topic}<span class="badge report">topic</span></div>
+          <span class="item-sub">${new Date(t.last_at).toLocaleString()} • ${t.count} items</span>
+          <div class="item-actions">
+            <button class="more-btn" title="More"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            <div class="menu">
+              <button class="menu-item share-btn">Share</button>
+              <button class="menu-item rename-btn">Rename</button>
+              <button class="menu-item archive-btn">Archive</button>
+              <button class="menu-item delete-btn">Delete</button>
+            </div>
+          </div>
+        `;
+
+        // clicking item opens report (not when clicking menu)
+        item.addEventListener('click', (e)=>{
+          const target = e.target;
+          if(target.closest('.item-actions')) return; // menu click
+          openReportByTopic(t.topic);
+        });
+
+        // menu open/close
+        const moreBtn = item.querySelector('.more-btn');
+        const menuEl  = item.querySelector('.menu');
+        moreBtn.addEventListener('click', async (e)=>{
+          e.stopPropagation();
+          // Enable/disable menu based on whether a report exists
+          const rid = await getReportMetaByTopic(t.topic);
+          const disabled = !rid;
+          menuEl.querySelectorAll('.menu-item').forEach(btn=>{
+            if(disabled) btn.setAttribute('disabled','true'); else btn.removeAttribute('disabled');
+          });
+
+          // close other open menus
+          document.querySelectorAll('.menu.open').forEach(m=>{ if(m!==menuEl) m.classList.remove('open'); });
+          menuEl.classList.toggle('open');
+        });
+
+        // actions
+        item.querySelector('.share-btn').addEventListener('click', async (e)=>{
+          e.stopPropagation();
+          menuEl.classList.remove('open');
+          const rid = await getReportMetaByTopic(t.topic);
+          if(!rid){ alert('No report found for this topic.'); return; }
+          const r = await fetch('/api/history/action', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({kind:'report', id: rid, action:'share'})
+          });
+          const data = await r.json();
+          if(!r.ok){ alert(data.error||'Failed to share'); return; }
+          const full = location.origin + (data.share_url || '');
+          prompt('Share link (copy):', full);
+        });
+
+        item.querySelector('.rename-btn').addEventListener('click', async (e)=>{
+          e.stopPropagation();
+          menuEl.classList.remove('open');
+          const rid = await getReportMetaByTopic(t.topic);
+          if(!rid){ alert('No report found for this topic.'); return; }
+          const newName = prompt('New topic name:', t.topic);
+          if(!newName || newName.trim()===t.topic) return;
+          const r = await fetch('/api/history/action', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({kind:'topic', action:'rename', value: t.topic, new_name: newName.trim()})
+          });
+          const data = await r.json();
+          if(!r.ok){ alert(data.error||'Failed to rename'); return; }
+          // clear caches and refresh
+          topicIdCache.delete(t.topic);
+          await loadSidebarHistory();
+          if(currentTopic === t.topic){ // if viewing, reload with new name
+            currentTopic = newName.trim();
+            openReportByTopic(currentTopic);
+          }
+        });
+
+        item.querySelector('.archive-btn').addEventListener('click', async (e)=>{
+          e.stopPropagation();
+          menuEl.classList.remove('open');
+          const rid = await getReportMetaByTopic(t.topic);
+          if(!rid){ alert('No report found for this topic.'); return; }
+          if(!confirm('Archive this report topic?')) return;
+          const r = await fetch('/api/history/action', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({kind:'topic', action:'archive', value: t.topic})
+          });
+          const data = await r.json();
+          if(!r.ok){ alert(data.error||'Failed to archive'); return; }
+          if(currentTopic === t.topic){
+            document.getElementById('reportContent').innerHTML='';
+            document.getElementById('chatLog').innerHTML='';
+            document.getElementById('qaBox').style.display='none';
+            currentTopic = null;
+          }
+          topicIdCache.delete(t.topic);
+          await loadSidebarHistory();
+        });
+
+        item.querySelector('.delete-btn').addEventListener('click', async (e)=>{
+          e.stopPropagation();
+          menuEl.classList.remove('open');
+          const rid = await getReportMetaByTopic(t.topic);
+          if(!rid){ alert('No report found for this topic.'); return; }
+          if(!confirm('Delete this report topic permanently?')) return;
+          const r = await fetch('/api/history/action', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({kind:'topic', action:'delete', value: t.topic})
+          });
+          const data = await r.json();
+          if(!r.ok){ alert(data.error||'Failed to delete'); return; }
+          if(currentTopic === t.topic){
+            document.getElementById('reportContent').innerHTML='';
+            document.getElementById('chatLog').innerHTML='';
+            document.getElementById('qaBox').style.display='none';
+            currentTopic = null;
+          }
+          topicIdCache.delete(t.topic);
+          await loadSidebarHistory();
+        });
+
+        container.appendChild(item);
+      });
+
+      // close menus when clicking elsewhere
+      document.addEventListener('click', (e)=>{
+        if(!e.target.closest('.chat-history-item')) {
+          document.querySelectorAll('.menu.open').forEach(m=>m.classList.remove('open'));
+        }
+      });
+    }else{
+      const empty=document.createElement('div');
+      empty.style="color:#9CA3AF;font-size:12px;padding:8px;";
+      empty.textContent="No history yet. Generate a report to begin.";
+      container.appendChild(empty);
+    }
+  }catch(e){
+    const err=document.createElement('div');
+    err.style="color:#ef4444;font-size:12px;padding:8px;";
+    err.textContent="Failed to load history.";
+    container.appendChild(err);
+  }
+}
+
+/* new chat = clear current panes */
+document.getElementById('newChatBtn').addEventListener('click', ()=>{
+  document.getElementById('reportContent').innerHTML='';
+  document.getElementById('chatLog').innerHTML='';
+  document.getElementById('qaBox').style.display='none';
+  currentTopic = null;
+  document.getElementById('researchForm').reset();
+  document.getElementById('reportSection').style.display = 'none';
+});
+
+loadSidebarHistory();
+</script>
+</body>
+</html>

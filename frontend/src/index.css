@@ -1,0 +1,26 @@
+/* frontend/src/index.css */
+
+/* Import Google Font */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+/* Import Tailwind */
+@import "tailwindcss";
+
+/* Apply Poppins globally */
+html, body {
+  font-family: 'Poppins', sans-serif;
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}

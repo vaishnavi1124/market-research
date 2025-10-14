@@ -1,0 +1,21 @@
+# Python dependencies and virtual environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Node.js dependencies
+node_modules/
+dist/
+.DS_Store
+
+# Environment variables
+.env
+
+# Generated folders (customize if needed)
+Outputs/
+Uploads/
+
+# IDE/Editor specific folders
+.vscode/
+.idea/
