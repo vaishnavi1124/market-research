@@ -56,9 +56,9 @@ and report generation.
 ## ⚙️ Environment Variables
 
 ```env
-ERPER_API_KEY=**************ec106ba4f10
+SERPER_API_KEY=your_serperapi_key
 SERPER_BASE_URL=https://google.serper.dev/search
-GEMINI_API_KEY=**************FxGWAnI
+GEMINI_API_KEY=
 LLM_MODEL=gemini/gemini-2.5-flash
 PINECONE_API_KEY=**************ExWvEYPCRynnQb8Cz8pxPiV
 PINECONE_INDEX_NAME=sentiment-index
