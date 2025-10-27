@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 
 # 🧠 Market Research & Sentiment Analysis System
 
