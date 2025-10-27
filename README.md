@@ -58,20 +58,20 @@ and report generation.
 ```env
 SERPER_API_KEY=your_serperapi_key
 SERPER_BASE_URL=https://google.serper.dev/search
-GEMINI_API_KEY=
+GEMINI_API_KEY=your_gemini_key
 LLM_MODEL=gemini/gemini-2.5-flash
-PINECONE_API_KEY=**************ExWvEYPCRynnQb8Cz8pxPiV
-PINECONE_INDEX_NAME=sentiment-index
-PINECONE_INDEX_HOST=https://sentiment-index-x1942q1.svc.aped-4627-b74a.pinecone.io
+PINECONE_API_KEY=your_pinecone_key
+PINECONE_INDEX_NAME=your_pinecone_index_name
+PINECONE_INDEX_HOST=your_pinecone_host
 PINECONE_ENV=us-west1-gcp
 
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=root
-DB_NAME=market_research
+DB_PASSWORD=your_db_password
+DB_NAME=your_db_name
 
-TAVILY_API_KEY=**************JpbSK
+TAVILY_API_KEY=your_tavily_key
 
 AUTH_HASH_SCHEME=argon2
 JWT_ISSUER=mr-backend
@@ -83,8 +83,8 @@ CORS_ORIGIN=http://localhost:5173/
 
 SMTP_SERVER=smtp.office365.com
 SMTP_PORT=587
-SMTP_USERNAME=sales@genintel.in
-SMTP_PASSWORD=**************501
+SMTP_USERNAME=your_email
+SMTP_PASSWORD=ypur_email_password
 
 CREWAI_TRACING_ENABLED=true
 ```
